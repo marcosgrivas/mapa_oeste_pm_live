@@ -37,6 +37,16 @@
       margin-bottom: 6px;
       width: 100%;
     }
+    .mza-label {
+      font-size: 12px;
+      font-weight: bold;
+      color: #000;
+      background: rgba(255,255,255,0.7);
+      border: none;
+      box-shadow: none;
+    }
+</style>
+
   </style>
 </head>
 <body>
@@ -69,27 +79,56 @@
 
   // 3. Cargar manzanas
   let manzanasLayer;
+let currentZoom = map.getZoom();
 
-  fetch('manzanas.geojson')
-    .then(res => res.json())
-    .then(data => {
-      manzanasLayer = L.geoJSON(data, {
-        style: feature => ({
-          color: '#333',
-          weight: 1,
-          fillColor: colorPorTerritorio(feature.properties.territorio),
-          fillOpacity: 0.5
-        }),
-        onEachFeature: (feature, layer) => {
-          layer.bindTooltip(
-            feature.properties.territorio,
-            { permanent: false }
-          );
+function getTooltipText(props, zoom) {
+  if (zoom < 15) return null;
+  if (zoom < 17) return `Territorio ${props.id_terr}`;
+  return `T ${props.id_terr} – Mza ${props.id_mza}`;
+  
+}
+
+fetch('manzanas.geojson')
+  .then(res => res.json())
+  .then(data => {
+    manzanasLayer = L.geoJSON(data, {
+      style: feature => ({
+        color: '#333',
+        weight: 1,
+        fillColor: colorPorTerritorio(feature.properties.id_terr),
+        fillOpacity: 0.5
+      }),
+      onEachFeature: (feature, layer) => {
+        const text = getTooltipText(feature.properties, currentZoom);
+        if (text) {
+          layer.bindTooltip(text, {
+            permanent: true,
+            direction: 'center',
+            className: 'mza-label'
+          });
         }
-      }).addTo(map);
+      }
+    }).addTo(map);
 
-      map.fitBounds(manzanasLayer.getBounds());
-    });
+    map.fitBounds(manzanasLayer.getBounds());
+  });
+
+// Recalcular etiquetas al cambiar zoom
+map.on('zoomend', () => {
+  currentZoom = map.getZoom();
+  manzanasLayer.eachLayer(layer => {
+    layer.unbindTooltip();
+    const props = layer.feature.properties;
+    const text = getTooltipText(props, currentZoom);
+    if (text) {
+      layer.bindTooltip(text, {
+        permanent: true,
+        direction: 'center',
+        className: 'mza-label'
+      });
+    }
+  });
+});
 
   // 4. Ubicación del usuario
   let userMarker;
