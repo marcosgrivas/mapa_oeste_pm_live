@@ -1,50 +1,118 @@
-let manzanasLayer;
-let currentZoom = map.getZoom();
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa de Territorios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-function getTooltipText(props, zoom) {
-  if (zoom < 15) return null;
-  if (zoom < 17) return `Territorio ${props.id_terr}`;
-  return `T ${props.id_terr} – Mza ${props.id_mza}`;
-}
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-fetch('manzanas.geojson')
-  .then(res => res.json())
-  .then(data => {
-    manzanasLayer = L.geoJSON(data, {
-      style: feature => ({
-        color: '#333',
-        weight: 1,
-        fillColor: colorPorTerritorio(feature.properties.id_terr),
-        fillOpacity: 0.5
-      }),
-      onEachFeature: (feature, layer) => {
-        const text = getTooltipText(feature.properties, currentZoom);
-        if (text) {
-          layer.bindTooltip(text, {
-            permanent: true,
-            direction: 'center',
-            className: 'mza-label'
-          });
-        }
-      }
-    }).addTo(map);
-
-    map.fitBounds(manzanasLayer.getBounds());
-  });
-
-// Recalcular etiquetas al cambiar zoom
-map.on('zoomend', () => {
-  currentZoom = map.getZoom();
-  manzanasLayer.eachLayer(layer => {
-    layer.unbindTooltip();
-    const props = layer.feature.properties;
-    const text = getTooltipText(props, currentZoom);
-    if (text) {
-      layer.bindTooltip(text, {
-        permanent: true,
-        direction: 'center',
-        className: 'mza-label'
-      });
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
     }
+    #map {
+      height: 100%;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .controls button {
+      display: block;
+      margin-bottom: 6px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="controls">
+  <button onclick="locateUser()">📍 Mi ubicación</button>
+  <button onclick="window.open('general.pdf')">📄 Descargar mapa PDF</button>
+</div>
+
+<script>
+  // 1. Mapa base
+  const map = L.map('map').setView([-34.6, -58.4], 14); // ajustamos después
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // 2. Colores por territorio (ejemplo)
+  function colorPorTerritorio(t) {
+    const colores = {
+      "1": "#e41a1c",
+      "2": "#377eb8",
+      "3": "#4daf4a"
+    };
+    return colores[t] || "#999999";
+  }
+
+  // 3. Cargar manzanas
+  let manzanasLayer;
+
+  fetch('manzanas.geojson')
+    .then(res => res.json())
+    .then(data => {
+      manzanasLayer = L.geoJSON(data, {
+        style: feature => ({
+          color: '#333',
+          weight: 1,
+          fillColor: colorPorTerritorio(feature.properties.territorio),
+          fillOpacity: 0.5
+        }),
+        onEachFeature: (feature, layer) => {
+          layer.bindTooltip(
+            feature.properties.territorio,
+            { permanent: false }
+          );
+        }
+      }).addTo(map);
+
+      map.fitBounds(manzanasLayer.getBounds());
+    });
+
+  // 4. Ubicación del usuario
+  let userMarker;
+
+  function locateUser() {
+    map.locate({ setView: true, maxZoom: 17 });
+  }
+
+  map.on('locationfound', e => {
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker(e.latlng, {
+      radius: 8,
+      fillColor: '#007bff',
+      color: '#fff',
+      weight: 2,
+      fillOpacity: 1
+    }).addTo(map);
   });
-});
+
+  map.on('locationerror', () => {
+    alert('No se pudo obtener la ubicación.');
+  });
+</script>
+
+</body>
+</html>
