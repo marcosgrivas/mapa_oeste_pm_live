@@ -37,16 +37,6 @@
       margin-bottom: 6px;
       width: 100%;
     }
-    .mza-label {
-      font-size: 12px;
-      font-weight: bold;
-      color: #000;
-      background: rgba(255,255,255,0.7);
-      border: none;
-      box-shadow: none;
-    }
-</style>
-
   </style>
 </head>
 <body>
@@ -85,7 +75,6 @@ function getTooltipText(props, zoom) {
   if (zoom < 15) return null;
   if (zoom < 17) return `Territorio ${props.id_terr}`;
   return `T ${props.id_terr} – Mza ${props.id_mza}`;
-  
 }
 
 fetch('manzanas.geojson')
@@ -129,6 +118,7 @@ map.on('zoomend', () => {
     }
   });
 });
+
 
   // 4. Ubicación del usuario
   let userMarker;
