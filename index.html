@@ -53,18 +53,30 @@
     });
 
   // 3. Manzanas
-  fetch('manzanas.geojson')
+    fetch('manzanas.geojson')
     .then(r => r.json())
     .then(data => {
       L.geoJSON(data, {
-        style: {
+        style: feature => ({
           color: '#333',
           weight: 1,
-          fillColor: '#ffcc00',
-          fillOpacity: 0.4
-        }
+          fillColor: colorPorTerritorio(feature.properties.id_terr),
+          fillOpacity: 0.45
+        })
       }).addTo(map);
     });
+
+  function colorPorTerritorio(id) {
+    const colores = {
+      "1": "#e41a1c",
+      "2": "#377eb8",
+      "3": "#4daf4a",
+      "4": "#984ea3",
+      "5": "#ff7f00"
+    };
+    return colores[id] || "#cccccc";
+  }
+
 </script>
 
 </body>
