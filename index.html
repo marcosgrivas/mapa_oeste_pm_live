@@ -25,10 +25,10 @@
 
     .label-territorio {
       font-weight: bold;
-      font-size: 14px;
+      font-size: 20px;
       color: #000;
       background: rgba(255,255,255,0.85);
-      padding: 4px 8px;
+      padding: 0px 0px;
       border-radius: 6px;
       white-space: nowrap;
     }
@@ -37,7 +37,7 @@
       font-size: 12px;
       color: #000;
       background: rgba(255,255,255,0.7);
-      padding: 2px 6px;
+      padding: 0px 0px;
       border-radius: 4px;
       white-space: nowrap;
     }
@@ -122,7 +122,7 @@
       L.marker(centro, {
         icon: L.divIcon({
           className: 'label-territorio',
-          html: `Territorio ${f.properties.id_terr}`
+          html: `${f.properties.id_terr}`
         }),
         interactive: false
       }).addTo(layerLabelsTerritorios);
@@ -149,7 +149,7 @@
       L.marker(centro, {
         icon: L.divIcon({
           className: 'label-manzana',
-          html: `Mza ${f.properties.id_mza}`
+          html: `${f.properties.id_mza}`
         }),
         interactive: false
       }).addTo(layerLabelsManzanas);
