@@ -29,7 +29,9 @@
 <div id="map"></div>
 
 <script>
-  // 1. Mapa base
+  // =============================
+  // MAPA BASE
+  // =============================
   const map = L.map('map').setView([-34.6, -58.4], 14);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -37,35 +39,9 @@
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // 2. Territorios
-  fetch('territorios.geojson')
-    .then(r => r.json())
-    .then(data => {
-      const layerTerr = L.geoJSON(data, {
-        style: {
-          color: '#0066cc',
-          weight: 2,
-          fillOpacity: 0.05
-        }
-      }).addTo(map);
-
-      map.fitBounds(layerTerr.getBounds());
-    });
-
-  // 3. Manzanas
-    fetch('manzanas.geojson')
-    .then(r => r.json())
-    .then(data => {
-      L.geoJSON(data, {
-        style: feature => ({
-          color: '#333',
-          weight: 1,
-          fillColor: colorPorTerritorio(feature.properties.id_terr),
-          fillOpacity: 0.45
-        })
-      }).addTo(map);
-    });
-
+  // =============================
+  // PALETA POR TERRITORIO
+  // =============================
   function colorPorTerritorio(id) {
     const colores = {
       "1": "#e41a1c",
@@ -77,6 +53,69 @@
     return colores[id] || "#cccccc";
   }
 
+  // =============================
+  // LAYERS
+  // =============================
+  let layerTerritorios;
+  let layerManzanas;
+
+  // ---- Territorios
+  fetch('territorios.geojson')
+    .then(r => r.json())
+    .then(data => {
+      layerTerritorios = L.geoJSON(data, {
+        style: feature => ({
+          color: '#333',
+          weight: 2,
+          fillColor: colorPorTerritorio(feature.properties.id_terr),
+          fillOpacity: 0.4
+        })
+      }).addTo(map);
+
+      map.fitBounds(layerTerritorios.getBounds());
+    });
+
+  // ---- Manzanas
+  fetch('manzanas.geojson')
+    .then(r => r.json())
+    .then(data => {
+      layerManzanas = L.geoJSON(data, {
+        style: feature => ({
+          color: '#333',
+          weight: 1,
+          fillColor: colorPorTerritorio(feature.properties.id_terr),
+          fillOpacity: 0.5
+        })
+      });
+    });
+
+  // =============================
+  // CONTROL POR ZOOM
+  // =============================
+  const ZOOM_CORTE = 16;
+
+  function updateLayersByZoom() {
+    const z = map.getZoom();
+
+    if (z < ZOOM_CORTE) {
+      if (layerManzanas && map.hasLayer(layerManzanas)) {
+        map.removeLayer(layerManzanas);
+      }
+      if (layerTerritorios && !map.hasLayer(layerTerritorios)) {
+        map.addLayer(layerTerritorios);
+      }
+    } else {
+      if (layerTerritorios && map.hasLayer(layerTerritorios)) {
+        map.removeLayer(layerTerritorios);
+      }
+      if (layerManzanas && !map.hasLayer(layerManzanas)) {
+        map.addLayer(layerManzanas);
+      }
+    }
+  }
+
+  map.on('zoomend', updateLayersByZoom);
+  map.whenReady(updateLayersByZoom);
 </script>
 
 </body>
