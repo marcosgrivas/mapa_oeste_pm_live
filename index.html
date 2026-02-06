@@ -42,16 +42,39 @@
   // =============================
   // PALETA POR TERRITORIO
   // =============================
-  function colorPorTerritorio(id) {
+    function colorPorTerritorio(id) {
     const colores = {
-      "1": "#e41a1c",
-      "2": "#377eb8",
-      "3": "#4daf4a",
-      "4": "#984ea3",
-      "5": "#ff7f00"
+      "0":  "#c6dbef",
+      "1":  "#78a5b5",
+      "2":  "#f7c99b",
+      "3":  "#eeeeb2",
+      "4":  "#a3bedb",
+      "5":  "#db736c",
+      "6":  "#89c79b",
+      "7":  "#b4cde3",
+      "8":  "#f5e5b5",
+      "9":  "#e48571",
+      "10": "#7094c2",
+      "11": "#f4b98c",
+      "12": "#9cd78e",
+      "13": "#81a2ca",
+      "14": "#f0a882",
+      "15": "#f0a882",
+      "16": "#b0e684",
+      "17": "#f7d8aa",
+      "18": "#d06267",
+      "19": "#92b0d2",
+      "20": "#c6ec8a",
+      "21": "#eb9678",
+      "22": "#80b6a8",
+      "23": "#b4445a",
+      "24": "#dcf0a0",
+      "25": "#a53752"
     };
-    return colores[id] || "#cccccc";
+
+    return colores[String(id)] || "#cccccc";
   }
+
 
   // =============================
   // LAYERS
@@ -66,9 +89,9 @@
       layerTerritorios = L.geoJSON(data, {
         style: feature => ({
           color: '#333',
-          weight: 2,
+          weight: 1,
           fillColor: colorPorTerritorio(feature.properties.id_terr),
-          fillOpacity: 0.4
+          fillOpacity: 0.5
         })
       }).addTo(map);
 
@@ -92,7 +115,7 @@
   // =============================
   // CONTROL POR ZOOM
   // =============================
-  const ZOOM_CORTE = 18;
+  const ZOOM_CORTE = 17;
 
   function updateLayersByZoom() {
     const z = map.getZoom();
