@@ -224,12 +224,18 @@
   let userMarker, userAccuracy;
 
   function locateUser() {
-    map.locate({
-      watch: true,
-      enableHighAccuracy: true,
-      setView: true,
-      maxZoom: 18
-    });
+  let firstFix = true;
+  map.locate({
+    watch: true,
+    enableHighAccuracy: true
+  });
+
+  map.on('locationfound', e => {
+    if (firstFix) {
+      map.setView(e.latlng, 17);
+      firstFix = false;
+    }
+  });
   }
 
   map.on('locationfound', e => {
@@ -258,22 +264,24 @@
   let orientationMode = 'north';
 
   function handleOrientation(e) {
-    if (orientationMode !== 'device' || e.alpha === null) return;
-    map.setBearing(360 - e.alpha);
-  }
+  if (orientationMode !== 'device') return;
+  if (e.alpha == null) return;
 
-  function toggleOrientation() {
-    if (orientationMode === 'north') {
-      orientationMode = 'device';
-      window.addEventListener('deviceorientationabsolute', handleOrientation);
-      alert('Mapa orientado según el teléfono');
-    } else {
-      orientationMode = 'north';
-      window.removeEventListener('deviceorientationabsolute', handleOrientation);
-      map.setBearing(0);
-      alert('Mapa orientado al norte');
-    }
+  map.setBearing(360 - e.alpha);
+}
+
+function toggleOrientation() {
+  if (orientationMode === 'north') {
+    orientationMode = 'device';
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    alert('Orientación activada');
+  } else {
+    orientationMode = 'north';
+    window.removeEventListener('deviceorientation', handleOrientation, true);
+    map.setBearing(0);
+    alert('Orientación al norte');
   }
+}
 
   function requestOrientationPermission() {
     if (
