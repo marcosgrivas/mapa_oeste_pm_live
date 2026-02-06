@@ -12,6 +12,9 @@
   />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <!-- Leaflet Rotate -->
+  <script src="https://unpkg.com/leaflet-rotate/dist/leaflet-rotate.min.js"></script>
+
   <style>
     html, body {
       margin: 0;
@@ -23,86 +26,76 @@
       width: 100%;
     }
 
-    /* =========================
-   ETIQUETAS DE TERRITORIO
-   ========================= */
-.label-territorio {
-  background: transparent !important;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
+    /* Botonera */
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .controls button {
+      display: block;
+      width: 100%;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
 
-  font-size: 26px;
-  font-weight: 700;
-  color: #000;
-  white-space: nowrap;
+    /* Etiquetas territorio */
+    .label-territorio {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+      white-space: nowrap;
+      text-shadow:
+        -2px -2px 0 #fff,
+         2px -2px 0 #fff,
+        -2px  2px 0 #fff,
+         2px  2px 0 #fff;
+    }
 
-  text-shadow:
-    -2px -2px 0 #fff,
-     2px -2px 0 #fff,
-    -2px  2px 0 #fff,
-     2px  2px 0 #fff,
-     0   -2px 0 #fff,
-     0    2px 0 #fff,
-    -2px  0   0 #fff,
-     2px  0   0 #fff;
-}
-
-/* =========================
-   ETIQUETAS DE MANZANA
-   ========================= */
-.label-manzana {
-  background: transparent !important;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-
-  font-size: 14px;
-  font-weight: 600;
-  color: #000;
-  white-space: nowrap;
-
-  text-shadow:
-    -1px -1px 0 #fff,
-     1px -1px 0 #fff,
-    -1px  1px 0 #fff,
-     1px  1px 0 #fff,
-     0   -1px 0 #fff,
-     0    1px 0 #fff,
-    -1px  0   0 #fff,
-     1px  0   0 #fff;
-}
-
-.controls {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1000;
-  background: white;
-  padding: 6px;
-  border-radius: 6px;
-}
-
+    /* Etiquetas manzana */
+    .label-manzana {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      font-size: 12px;
+      font-weight: 600;
+      color: #000;
+      white-space: nowrap;
+      text-shadow:
+        -1px -1px 0 #fff,
+         1px -1px 0 #fff,
+        -1px  1px 0 #fff,
+         1px  1px 0 #fff;
+    }
   </style>
 </head>
 
 <body>
+
 <div id="map"></div>
+
 <div class="controls">
   <button onclick="locateUser()">📍 Mi ubicación</button>
   <button onclick="requestOrientationPermission()">🧭 Orientación</button>
 </div>
 
-
 <script>
   // =============================
-  // MAPA BASE
+  // MAPA
   // =============================
   const map = L.map('map', {
     zoomControl: false,
     rotate: true,
     touchRotate: true
-  }).setView([-34.6, -58.4], 16);
+  }).setView([-34.6, -58.4], 14);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -110,11 +103,11 @@
   }).addTo(map);
 
   // =============================
-  // PALETA POR TERRITORIO
+  // COLORES
   // =============================
-    function colorPorTerritorio(id) {
+  function colorPorTerritorio(id) {
     const colores = {
-      "0":  "#c6dbef",
+     "0":  "#c6dbef",
       "1":  "#78a5b5",
       "2":  "#f7c99b",
       "3":  "#eeeeb2",
@@ -141,153 +134,160 @@
       "24": "#dcf0a0",
       "25": "#a53752"
     };
-
     return colores[String(id)] || "#cccccc";
   }
-
 
   // =============================
   // LAYERS
   // =============================
-  let layerTerritorios;
-  let layerManzanas;
-  let layerLabelsTerritorios = L.layerGroup().addTo(map);
-  let layerLabelsManzanas = L.layerGroup();
-  let orientationMode = 'north'; // 'north' | 'device'
+  let layerTerritorios, layerManzanas;
+  let labelsTerritorios = L.layerGroup().addTo(map);
+  let labelsManzanas = L.layerGroup();
 
   // ---- Territorios
   fetch('territorios.geojson')
-  .then(r => r.json())
-  .then(data => {
-    layerTerritorios = L.geoJSON(data, {
-      style: feature => ({
-        color: '#333',
-        weight: 2,
-        fillColor: colorPorTerritorio(feature.properties.id_terr),
-        fillOpacity: 0.4
-      })
-    }).addTo(map);
+    .then(r => r.json())
+    .then(data => {
+      layerTerritorios = L.geoJSON(data, {
+        style: f => ({
+          color: '#333',
+          weight: 1,
+          fillColor: colorPorTerritorio(f.properties.id_terr),
+          fillOpacity: 0.5
+        })
+      }).addTo(map);
 
-    // etiquetas de territorio (siempre visibles)
-    data.features.forEach(f => {
-      const centro = L.geoJSON(f).getBounds().getCenter();
-      L.marker(centro, {
-        icon: L.divIcon({
-          className: 'label-territorio',
-          html: `${f.properties.id_terr}`
-        }),
-        interactive: false
-      }).addTo(layerLabelsTerritorios);
+      data.features.forEach(f => {
+        const c = L.geoJSON(f).getBounds().getCenter();
+        L.marker(c, {
+          icon: L.divIcon({
+            className: 'label-territorio',
+            html: `${f.properties.id_terr}`
+          }),
+          interactive: false
+        }).addTo(labelsTerritorios);
+      });
+
+      map.fitBounds(layerTerritorios.getBounds());
     });
-
-    map.fitBounds(layerTerritorios.getBounds());
-  });
 
   // ---- Manzanas
   fetch('manzanas.geojson')
-  .then(r => r.json())
-  .then(data => {
-    layerManzanas = L.geoJSON(data, {
-      style: feature => ({
-        color: '#333',
-        weight: 1,
-        fillColor: colorPorTerritorio(feature.properties.id_terr),
-        fillOpacity: 0.5
-      })
+    .then(r => r.json())
+    .then(data => {
+      layerManzanas = L.geoJSON(data, {
+        style: f => ({
+          color: '#333',
+          weight: 1,
+          fillColor: colorPorTerritorio(f.properties.id_terr),
+          fillOpacity: 0.5
+        })
+      });
+
+      data.features.forEach(f => {
+        const c = L.geoJSON(f).getBounds().getCenter();
+        L.marker(c, {
+          icon: L.divIcon({
+            className: 'label-manzana',
+            html: `${f.properties.id_mza}`
+          }),
+          interactive: false
+        }).addTo(labelsManzanas);
+      });
     });
 
-    data.features.forEach(f => {
-      const centro = L.geoJSON(f).getBounds().getCenter();
-      L.marker(centro, {
-        icon: L.divIcon({
-          className: 'label-manzana',
-          html: `${f.properties.id_mza}`
-        }),
-        interactive: false
-      }).addTo(layerLabelsManzanas);
-    });
-  });
-
   // =============================
-  // CONTROL POR ZOOM
+  // ZOOM LOGIC
   // =============================
-  const ZOOM_CORTE = 17;
+  const ZOOM_CORTE = 16;
 
- function updateLayersByZoom() {
-  const z = map.getZoom();
+  function updateLayersByZoom() {
+    const z = map.getZoom();
 
-  if (z < ZOOM_CORTE) {
-    // vista general
-    map.addLayer(layerTerritorios);
-    map.removeLayer(layerManzanas);
-    map.removeLayer(layerLabelsManzanas);
-
-    // labels de territorio siempre visibles
-    map.addLayer(layerLabelsTerritorios);
-
-  } else {
-    // vista detalle
-    map.removeLayer(layerTerritorios);
-    map.addLayer(layerManzanas);
-    map.addLayer(layerLabelsManzanas);
-
-    // labels de territorio siguen visibles
-    map.addLayer(layerLabelsTerritorios);
+    if (z < ZOOM_CORTE) {
+      map.addLayer(layerTerritorios);
+      map.removeLayer(layerManzanas);
+      map.removeLayer(labelsManzanas);
+    } else {
+      map.removeLayer(layerTerritorios);
+      map.addLayer(layerManzanas);
+      map.addLayer(labelsManzanas);
+    }
   }
-}
 
   map.on('zoomend', updateLayersByZoom);
   map.whenReady(updateLayersByZoom);
 
-  let userMarker;
+  // =============================
+  // UBICACIÓN
+  // =============================
+  let userMarker, userAccuracy;
 
-function locateUser() {
-  map.locate({
-    setView: true,
-    maxZoom: 18,
-    enableHighAccuracy: true
-  });
-}
-
-map.on('locationfound', e => {
-  if (userMarker) map.removeLayer(userMarker);
-
-  userMarker = L.circleMarker(e.latlng, {
-    radius: 8,
-    color: '#007bff',
-    fillColor: '#007bff',
-    fillOpacity: 1
-  }).addTo(map);
-});
-
-map.on('locationerror', () => {
-  alert('No se pudo obtener la ubicación.');
-});
-
-function handleOrientation(event) {
-  if (orientationMode !== 'device') return;
-  if (event.alpha === null) return;
-
-  const bearing = 360 - event.alpha;
-  map.setBearing(bearing);
-}
-
-function toggleOrientation() {
-  if (orientationMode === 'north') {
-    orientationMode = 'device';
-    window.addEventListener('deviceorientationabsolute', handleOrientation);
-    alert('Mapa orientado según el teléfono');
-  } else {
-    orientationMode = 'north';
-    window.removeEventListener('deviceorientationabsolute', handleOrientation);
-    map.setBearing(0);
-    alert('Mapa orientado al norte');
+  function locateUser() {
+    map.locate({
+      watch: true,
+      enableHighAccuracy: true,
+      setView: true,
+      maxZoom: 18
+    });
   }
-}
 
+  map.on('locationfound', e => {
+    if (userMarker) map.removeLayer(userMarker);
+    if (userAccuracy) map.removeLayer(userAccuracy);
+
+    userMarker = L.circleMarker(e.latlng, {
+      radius: 6,
+      color: '#fff',
+      weight: 2,
+      fillColor: '#007bff',
+      fillOpacity: 1
+    }).addTo(map);
+
+    userAccuracy = L.circle(e.latlng, {
+      radius: e.accuracy,
+      color: '#007bff',
+      weight: 1,
+      fillOpacity: 0.15
+    }).addTo(map);
+  });
+
+  // =============================
+  // ORIENTACIÓN
+  // =============================
+  let orientationMode = 'north';
+
+  function handleOrientation(e) {
+    if (orientationMode !== 'device' || e.alpha === null) return;
+    map.setBearing(360 - e.alpha);
+  }
+
+  function toggleOrientation() {
+    if (orientationMode === 'north') {
+      orientationMode = 'device';
+      window.addEventListener('deviceorientationabsolute', handleOrientation);
+      alert('Mapa orientado según el teléfono');
+    } else {
+      orientationMode = 'north';
+      window.removeEventListener('deviceorientationabsolute', handleOrientation);
+      map.setBearing(0);
+      alert('Mapa orientado al norte');
+    }
+  }
+
+  function requestOrientationPermission() {
+    if (
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function'
+    ) {
+      DeviceOrientationEvent.requestPermission().then(p => {
+        if (p === 'granted') toggleOrientation();
+      });
+    } else {
+      toggleOrientation();
+    }
+  }
 </script>
-
-
 
 </body>
 </html>
