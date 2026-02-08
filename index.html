@@ -5,6 +5,8 @@
   <title>Mapa de Territorios</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://unpkg.com/leaflet-rotate/dist/leaflet-rotate.min.js"></script>
+
   <!-- Leaflet -->
   <link
     rel="stylesheet"
@@ -61,19 +63,21 @@
 <div id="map"></div>
 
 <div class="controls">
-  <button id="btnDownload">⬇️ Descargar mapa</button>
+<button onclick="window.open('general.pdf')">📄 Descargar mapa PDF</button>
 </div>
 
 <script>
   // =============================
   // MAPA
   // =============================
-  const map = L.map('map', {
-    zoomControl: false,
-    dragging: true,
-    touchZoom: true,
-    scrollWheelZoom: true
-  }).setView([-42.77, -65.03], 14);
+ const map = L.map('map', {
+  zoomControl: false,
+  rotate: true,
+  bearing: 0,
+  touchRotate: true,
+  touchZoom: true,
+  dragging: true
+}).setView([-42.77, -65.03], 14);
 
   const boundsMadryn = L.latLngBounds(
     [-42.90, -65.25], // SW
@@ -81,8 +85,8 @@
   );
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    minZoom: 13,
-    maxZoom: 18,
+    minZoom: 14,
+    maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
@@ -183,19 +187,6 @@
   map.on('zoomend', updateLayersByZoom);
   map.whenReady(updateLayersByZoom);
 
-  // =============================
-  // DESCARGAR MAPA
-  // =============================
-  document.getElementById('btnDownload')
-  .addEventListener('click', () => {
-    const link = document.createElement('a');
-    link.href = 'general.pdf';
-    link.download = 'general.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
-  
   // Evitar que el mapa capture el touch del botón
   const controls = document.querySelector('.controls');
   L.DomEvent.disableClickPropagation(controls);
