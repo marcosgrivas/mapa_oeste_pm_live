@@ -71,11 +71,22 @@
   // =============================
   // MAPA
   // =============================
-  const map = L.map('map', {
-    zoomControl: false,
-    rotate: true,
-    touchRotate: true
-  }).setView([-34.6, -58.4], 14);
+const map = L.map('map', {
+  zoomControl: false,
+  rotate: true,
+  touchRotate: true
+}).setView([-42.77, -65.03], 14);
+
+const boundsMadryn = L.latLngBounds(
+  [-42.90, -65.25], // SW
+  [-42.65, -64.85]  // NE
+);
+
+map.whenReady(() => {
+  map.setMaxBounds(boundsMadryn);
+  map.setMinZoom(14);
+  map.setMaxZoom(19);
+});
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
