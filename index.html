@@ -78,13 +78,13 @@
   // MAPA
   // =============================
   const map = L.map('map', {
-    zoomControl: true,
+    zoomControl: false,
     rotate: true,
     bearing: 0,
-    touchRotate: true,
-    touchZoom: false,   // 👈 clave: permite rotar con 2 dedos
+    touchRotate: false,
+    touchZoom: true,   // 👈 clave: permite rotar con 2 dedos
     dragging: true,
-    scrollWheelZoom: false
+    scrollWheelZoom: true
   }).setView([-42.77, -65.03], 14);
 
   const boundsMadryn = L.latLngBounds(
