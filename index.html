@@ -6,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Leaflet Rotate -->
-  <script src="https://unpkg.com/leaflet-rotate/dist/leaflet-rotate.min.js"></script>
 
   <style>
     html, body, #map {
@@ -32,10 +32,8 @@
     }
 
     .controls button {
-      display: block;
-      width: 100%;
-      margin-bottom: 6px;
       font-size: 14px;
+      padding: 6px 10px;
     }
 
     .label-territorio {
@@ -63,35 +61,34 @@
 <div id="map"></div>
 
 <div class="controls">
-  <button onclick="locateUser()">📍 Mi ubicación</button>
-  <button onclick="requestOrientationPermission()">🧭 Orientación</button>
+  <button id="btnDownload">⬇️ Descargar mapa</button>
 </div>
 
 <script>
   // =============================
   // MAPA
   // =============================
-const map = L.map('map', {
-  zoomControl: false,
-  rotate: true,
-  touchRotate: true
-}).setView([-42.77, -65.03], 14);
+  const map = L.map('map', {
+    zoomControl: false,
+    dragging: true,
+    touchZoom: true,
+    scrollWheelZoom: true
+  }).setView([-42.77, -65.03], 14);
 
-const boundsMadryn = L.latLngBounds(
-  [-42.90, -65.25], // SW
-  [-42.65, -64.85]  // NE
-);
-
-map.whenReady(() => {
-  map.setMaxBounds(boundsMadryn);
-  map.setMinZoom(14);
-  map.setMaxZoom(19);
-});
+  const boundsMadryn = L.latLngBounds(
+    [-42.90, -65.25], // SW
+    [-42.65, -64.85]  // NE
+  );
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    minZoom: 13,
+    maxZoom: 18,
     attribution: '© OpenStreetMap'
   }).addTo(map);
+
+  map.whenReady(() => {
+    map.setMaxBounds(boundsMadryn);
+  });
 
   // =============================
   // COLORES
@@ -166,7 +163,11 @@ map.whenReady(() => {
       });
     });
 
+  // =============================
+  // ZOOM LOGIC
+  // =============================
   const ZOOM_CORTE = 16;
+
   function updateLayersByZoom() {
     if (map.getZoom() < ZOOM_CORTE) {
       map.addLayer(layerTerritorios);
@@ -178,108 +179,27 @@ map.whenReady(() => {
       map.addLayer(labelsManzanas);
     }
   }
+
   map.on('zoomend', updateLayersByZoom);
   map.whenReady(updateLayersByZoom);
 
   // =============================
-  // UBICACIÓN
+  // DESCARGAR MAPA
   // =============================
-  let userMarker, userAccuracy, headingMarker;
-  let firstFix = true;
-
-  function locateUser() {
-    map.locate({
-      watch: true,
-      enableHighAccuracy: true
-    });
-  }
-
-  map.on('locationfound', e => {
-    if (firstFix) {
-      map.setView(e.latlng, 17);
-      firstFix = false;
-    }
-
-    if (!userMarker) {
-      userMarker = L.circleMarker(e.latlng, {
-        radius: 6,
-        color: '#fff',
-        weight: 2,
-        fillColor: '#007bff',
-        fillOpacity: 1
-      }).addTo(map);
-    } else {
-      userMarker.setLatLng(e.latlng);
-    }
-
-    if (!userAccuracy) {
-      userAccuracy = L.circle(e.latlng, {
-        color: '#007bff',
-        weight: 1,
-        fillOpacity: 0.15
-      }).addTo(map);
-    } else {
-      userAccuracy.setLatLng(e.latlng).setRadius(e.accuracy);
-    }
-
-    if (headingMarker) {
-      headingMarker.setLatLng(e.latlng);
-    }
+  document.getElementById('btnDownload')
+  .addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.href = 'general.pdf';
+    link.download = 'general.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   });
-
-  // =============================
-  // ORIENTACIÓN
-  // =============================
-  let orientationMode = 'north';
-
-  function updateHeading(alpha) {
-    if (!userMarker) return;
-
-    if (!headingMarker) {
-      headingMarker = L.marker(userMarker.getLatLng(), {
-        icon: L.divIcon({
-          html: '▲',
-          iconSize: [20, 20]
-        }),
-        rotationOrigin: 'center center'
-      }).addTo(map);
-    }
-
-    headingMarker
-      .setLatLng(userMarker.getLatLng())
-      .setRotationAngle(360 - alpha);
-  }
-
-  function handleOrientation(e) {
-    if (orientationMode !== 'device') return;
-    if (e.alpha == null) return;
-
-    map.setBearing(360 - e.alpha);
-    updateHeading(e.alpha);
-  }
-
-  function toggleOrientation() {
-    if (orientationMode === 'north') {
-      orientationMode = 'device';
-      window.addEventListener('deviceorientation', handleOrientation, true);
-      alert('Orientación activada');
-    } else {
-      orientationMode = 'north';
-      window.removeEventListener('deviceorientation', handleOrientation, true);
-      map.setBearing(0);
-      alert('Orientación al norte');
-    }
-  }
-
-  function requestOrientationPermission() {
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission().then(p => {
-        if (p === 'granted') toggleOrientation();
-      });
-    } else {
-      toggleOrientation();
-    }
-  }
+  
+  // Evitar que el mapa capture el touch del botón
+  const controls = document.querySelector('.controls');
+  L.DomEvent.disableClickPropagation(controls);
+  L.DomEvent.disableScrollPropagation(controls);
 </script>
 
 </body>
