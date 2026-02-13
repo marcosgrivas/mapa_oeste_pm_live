@@ -1,216 +1,85 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Mapa de Territorios</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Leaflet Rotate -->
-  <script src="https://unpkg.com/leaflet-rotate/dist/leaflet-rotate.min.js"></script>
-
   <style>
-    html, body, #map {
+    body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      width: 100%;
+      font-family: sans-serif;
+      
     }
-
-    /* Botón descargar */
+    #map {
+      height: 100%;
+      
+    }
     .controls {
       position: absolute;
-      bottom: 12px;
-      left: 12px;
+      top: 10px;
+      left: 10px;
       z-index: 1000;
       background: white;
       padding: 8px;
-      border-radius: 8px;
+      border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-
     .controls button {
-      font-size: 15px;
-      padding: 8px 12px;
-    }
-
-    /* Zoom grande */
-    .leaflet-control-zoom a {
-      width: 42px;
-      height: 42px;
-      line-height: 42px;
-      font-size: 22px;
-    }
-
-    .label-territorio {
-      background: transparent;
-      border: none;
-      font-size: 26px;
-      font-weight: 700;
-      color: #000;
-      text-shadow: 0 0 3px #fff;
-    }
-
-    .label-manzana {
-      background: transparent;
-      border: none;
-      font-size: 16px;
-      font-weight: 600;
-      color: #000;
-      text-shadow: 0 0 2px #fff;
+      display: block;
+      margin-bottom: 6px;
+      width: 100%;
     }
   </style>
 </head>
-
 <body>
 
 <div id="map"></div>
 
 <div class="controls">
+  <button onclick="locateUser()">📍 Mi ubicación</button>
   <button onclick="window.open('general.pdf')">📄 Descargar mapa PDF</button>
 </div>
 
 <script>
-  // =============================
-  // MAPA
-  // =============================
-  const map = L.map('map', {
-    zoomControl: false,
-    rotate: true,
-    bearing: 0,
-    touchRotate: false,
-    touchZoom: true,   // 👈 clave: permite rotar con 2 dedos
-    dragging: true,
-    scrollWheelZoom: true
-  }).setView([-42.77, -65.03], 14);
-
-  const boundsMadryn = L.latLngBounds(
-    [-42.90, -65.25],
-    [-42.65, -64.85]
-  );
+  // 1. Mapa base
+  const map = L.map('map').setView([-42.768, -65.038], 14); // ajustamos después
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    minZoom: 13,
-    maxZoom: 18,
+    maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  map.whenReady(() => {
-    map.setMaxBounds(boundsMadryn);
-  });
+  // 4. Ubicación del usuario
+  let userMarker;
 
-  // =============================
-  // COLORES
-  // =============================
-  function colorPorTerritorio(id) {
-    const colores = {
-      "1":"#c6dbef","2":"#78a5b5","3":"#f7c99b","4":"#eeeeb2",
-      "5":"#a3bedb","6":"#db736c","7":"#89c79b","8":"#b4cde3",
-      "9":"#f5e5b5","10":"#e48571","11":"#7094c2","12":"#f4b98c",
-      "13":"#9cd78e","14":"#81a2ca","15":"#f0a882","16":"#f0a882",
-      "17":"#b0e684","18":"#f7d8aa","19":"#d06267","20":"#92b0d2",
-      "21":"#c6ec8a","22":"#eb9678","23":"#80b6a8","24":"#b4445a",
-      "25":"#dcf0a0","26":"#a53752"
-    };
-    return colores[String(id)] || "#ccc";
+  function locateUser() {
+    map.locate({ setView: true, maxZoom: 17 });
   }
 
-  // =============================
-  // LAYERS
-  // =============================
-  let layerTerritorios, layerManzanas;
-  const labelsTerritorios = L.layerGroup().addTo(map);
-  const labelsManzanas = L.layerGroup();
-
-  fetch('territorios.geojson')
-    .then(r => r.json())
-    .then(data => {
-      layerTerritorios = L.geoJSON(data, {
-        style: f => ({
-          color: '#333',
-          weight: 1,
-          fillColor: colorPorTerritorio(f.properties.id_terr),
-          fillOpacity: 0.5
-        })
-      }).addTo(map);
-
-      data.features.forEach(f => {
-        const c = L.geoJSON(f).getBounds().getCenter();
-        L.marker(c, {
-          icon: L.divIcon({
-            className: 'label-territorio',
-            html: f.properties.id_terr
-          }),
-          interactive: false
-        }).addTo(labelsTerritorios);
-      });
-
-      map.fitBounds(layerTerritorios.getBounds());
-    });
-
-  fetch('manzanas.geojson')
-    .then(r => r.json())
-    .then(data => {
-      layerManzanas = L.geoJSON(data, {
-        style: f => ({
-          color: '#333',
-          weight: 1,
-          fillColor: colorPorTerritorio(f.properties.id_terr),
-          fillOpacity: 0.5
-        })
-      });
-
-      data.features.forEach(f => {
-        const c = L.geoJSON(f).getBounds().getCenter();
-        L.marker(c, {
-          icon: L.divIcon({
-            className: 'label-manzana',
-            html: f.properties.id_mza
-          }),
-          interactive: false
-        }).addTo(labelsManzanas);
-      });
-    });
-
-  // =============================
-  // ZOOM LOGIC
-  // =============================
-  const ZOOM_CORTE = 16;
-
-  function updateLayersByZoom() {
-    if (map.getZoom() < ZOOM_CORTE) {
-      map.addLayer(layerTerritorios);
-      map.removeLayer(layerManzanas);
-      map.removeLayer(labelsManzanas);
-    } else {
-      map.removeLayer(layerTerritorios);
-      map.addLayer(layerManzanas);
-      map.addLayer(labelsManzanas);
-    }
-  }
-
-  map.on('zoomend', updateLayersByZoom);
-  map.whenReady(updateLayersByZoom);
-
-  // =============================
-  // DESCARGAR MAPA
-  // =============================
-  document.getElementById('btnDownload').addEventListener('click', () => {
-    const a = document.createElement('a');
-    a.href = 'general.pdf';
-    a.download = 'general.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  map.on('locationfound', e => {
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker(e.latlng, {
+      radius: 9,
+      fillColor: '#007bff',
+      color: '#fff',
+      weight: 2,
+      fillOpacity: 1
+    }).addTo(map);
   });
 
-  // Evitar que el mapa capture el touch del botón
-  const controls = document.querySelector('.controls');
-  L.DomEvent.disableClickPropagation(controls);
-  L.DomEvent.disableScrollPropagation(controls);
+  map.on('locationerror', () => {
+    alert('No se pudo obtener la ubicación.');
+  });
 </script>
 
 </body>
