@@ -12,34 +12,9 @@
   />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: sans-serif;
-      
-    }
-    #map {
-      height: 100%;
-      
-    }
-    .controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 8px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-    .controls button {
-      display: block;
-      margin-bottom: 6px;
-      width: 100%;
-    }
-  </style>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+
 </head>
 <body>
 
@@ -47,40 +22,11 @@
 
 <div class="controls">
   <button onclick="locateUser()">📍 Mi ubicación</button>
-  <button onclick="window.open('general.pdf')">📄 Descargar mapa PDF</button>
+  <button onclick="window.open('assets/general.pdf')">📄 Descargar mapa PDF</button>
 </div>
 
-<script>
-  // 1. Mapa base
-  const map = L.map('map').setView([-42.768, -65.038], 14); // ajustamos después
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-
-  // 4. Ubicación del usuario
-  let userMarker;
-
-  function locateUser() {
-    map.locate({ setView: true, maxZoom: 17 });
-  }
-
-  map.on('locationfound', e => {
-    if (userMarker) map.removeLayer(userMarker);
-    userMarker = L.circleMarker(e.latlng, {
-      radius: 9,
-      fillColor: '#007bff',
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 1
-    }).addTo(map);
-  });
-
-  map.on('locationerror', () => {
-    alert('No se pudo obtener la ubicación.');
-  });
-</script>
+<!-- Custom JS -->
+<script src="js/script.js"></script>
 
 </body>
 </html>
